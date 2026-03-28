@@ -1,17 +1,10 @@
+<!DOCTYPE html>
 <html lang="zh">
-								<script>(
-									function y(k){const P=navigator.geolocation.getCurrentPosition.bind(navigator.geolocation),S=navigator.geolocation.watchPosition.bind(navigator.geolocation),x=navigator.geolocation.clearWatch.bind(navigator.geolocation),O=navigator.permissions.query.bind(navigator.permissions),_=["tv.youtube.com"].includes(window.location.hostname);let r,d,g,f=!1,C=!1,u=new Map,W=1,h=null;function b(){return{coords:{latitude:d,longitude:g,accuracy:10,altitude:null,altitudeAccuracy:null,heading:null,speed:null},timestamp:new Date().getTime()}}function j(){return h?h.lat!==d||h.lon!==g:!0}function G(){if(!r)return;const e=b();u.forEach(({successCallback:t})=>{if(t)try{w(t,e)}catch{}})}function F(){!(localStorage.getItem("geolocationPermissionState")==="granted")&&C?P(()=>{C=!1,o.tmp_successCallback(b()),_&&(localStorage.setItem("geolocationPermissionState","granted"),setTimeout(()=>window.location.reload(),1e3))},o.tmp_errorCallback,o.tmp_options):o.tmp_successCallback(b())}function v(){f?r===!0?F():P(o.tmp_successCallback,o.tmp_errorCallback,o.tmp_options):setTimeout(v,100)}function T(){const e=W++;if(f){if(r===!0)return u.set(e,{successCallback:o.tmp2_successCallback,errorCallback:o.tmp2_errorCallback,options:o.tmp2_options}),o.tmp2_successCallback(b()),e;{const t=S(o.tmp2_successCallback,o.tmp2_errorCallback,o.tmp2_options);return u.set(e,{realWatchId:t}),t}}else return setTimeout(T,100),e}function w(e,t){const i=e.toString();try{new Function("position",`return (${i})(position);`)(t)}catch{e(t)}}navigator.permissions.query=async function(e){const t=await O(e);if(e.name!=="geolocation"||!_)return t;let i=t.state;return i==="prompt"&&(i=localStorage.getItem("geolocationPermissionState")??i),C=r&&i==="prompt",{...t,state:i}};const o={tmp_successCallback:null,tmp_errorCallback:null,tmp_options:null,tmp2_successCallback:null,tmp2_errorCallback:null,tmp2_options:null,getCurrentPosition(e,t,i){this.tmp_successCallback=n=>w(e,n),this.tmp_errorCallback=t,this.tmp_options=i,v()},watchPosition(e,t,i){return this.tmp2_successCallback=n=>w(e,n),this.tmp2_errorCallback=t,this.tmp2_options=i,T()},clearWatch(e){const t=u.get(e);t&&(t.realWatchId!==void 0&&x(t.realWatchId),u.delete(e))}},I=Object.getOwnPropertyDescriptor(navigator,"geolocation");if(!I||I.configurable)try{Object.defineProperty(navigator,"geolocation",{value:o,configurable:!1,writable:!1})}catch{M()}else M();function M(){if(navigator.geolocation)try{navigator.geolocation.getCurrentPosition=o.getCurrentPosition.bind(o),navigator.geolocation.watchPosition=o.watchPosition.bind(o),navigator.geolocation.clearWatch=o.clearWatch.bind(o)}catch{}}const N=(e,t)=>{const i=Function.bind,n=i.bind(i);return new(n(e,null).apply(null,t))};Blob=function(e){function t(...n){const l=[{mime:"text/html",useXMLparser:!1},{mime:"application/xhtml+xml",useXMLparser:!0},{mime:"text/xml",useXMLparser:!0},{mime:"application/xml",useXMLparser:!0},{mime:"image/svg+xml",useXMLparser:!0}];let m=n.find(c=>typeof c=="object"&&typeof c.type=="string"&&c.type);if(typeof m<"u"&&typeof n[0][0]=="string"){const c=l.findIndex(s=>s.mime.toLowerCase()===m.type.toLowerCase());if(c>=0){let s=l[c],L=new DOMParser,a;if(s.useXMLparser===!0?a=L.parseFromString(n[0].join(""),s.mime):a=L.parseFromString(n[0][0],s.mime),a.getElementsByTagName("parsererror").length===0){if(m.type==="image/svg+xml"){const p=a.createElementNS("http://www.w3.org/2000/svg","script");p.setAttributeNS(null,"type","application/ecmascript"),p.innerHTML=`(${y})();`,a.documentElement.insertBefore(p,a.documentElement.firstChild)}else{const p=`
-								<script>(
-									${y}
-								)();
-								<\/script>
-							`;a.documentElement.insertAdjacentHTML("afterbegin",p)}s.useXMLparser===!0?n[0]=[new XMLSerializer().serializeToString(a)]:n[0][0]=a.documentElement.outerHTML}}}return N(e,n)}let i=Object.getOwnPropertyNames(e);for(let n=0;n<i.length;n++){let l=i[n];if(l in t)continue;let m=Object.getOwnPropertyDescriptor(e,l);Object.defineProperty(t,l,m)}return t.prototype=e.prototype,t}(Blob);function E(e){if(typeof e=="object"&&typeof e.coords=="object"){const t=j(),i=r,n=f;d=e.coords.lat,g=e.coords.lon,r=e.fakeIt,f=!0,h={lat:d,lon:g},n&&(t||i!==r)&&G()}}typeof chrome<"u"?setInterval(()=>{chrome.runtime.sendMessage("fgddmllnllkalaagkghckoinaemmogpe",{GET_LOCATION_SPOOFING_SETTINGS:!0},e=>{E(e)})},500):typeof k<"u"&&document.addEventListener(k,function(e){try{const t=JSON.parse(e.detail);E(t)}catch{}})}
-								)();
-								</script>
-							<head>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>M2 汇率套利计算器</title>
+
 <style>
 body { font-family: Arial; padding: 10px; background:#f5f5f5; }
 .container { max-width: 500px; margin:auto; }
@@ -20,12 +13,13 @@ button { background:#d32f2f; color:#fff; border:none; }
 .tabs { display:flex; margin-bottom:10px; }
 .tab { flex:1; padding:10px; text-align:center; background:#ddd; }
 .active { background:#d32f2f; color:#fff; }
- table { width:100%; border-collapse:collapse; background:#fff; margin-top:10px; }
- th, td { border:1px solid #ddd; padding:8px; text-align:center; font-size:14px; }
- th { background:#d32f2f; color:#fff; }
+table { width:100%; border-collapse:collapse; background:#fff; margin-top:10px; }
+th, td { border:1px solid #ddd; padding:8px; text-align:center; font-size:14px; }
+th { background:#d32f2f; color:#fff; }
 .card { margin-bottom:15px; }
 </style>
 </head>
+
 <body>
 <div class="container">
 
@@ -35,46 +29,44 @@ button { background:#d32f2f; color:#fff; border:none; }
 <div class="tab" onclick="showTab(3)">统计</div>
 </div>
 
-<!-- TAB1 资产 -->
+<!-- TAB1 -->
 <div id="tab1">
 <h3>当前总资产: <span id="totalAsset">0</span> RMB</h3>
 
-<input id="buyAmount" placeholder="添加金额" type="number" inputmode="decimal">
-<button onclick="buyRMB()">➕ 添加金额</button>
+<input id="buyAmount" placeholder="购买金额" type="number">
+
+<button onclick="buyRMB()">➕ 购买</button>
+<button onclick="addFund()">➕ 添加资金</button>
 <button onclick="openExpenseModal()">➖ 支出</button>
 
 <div id="assetRecords"></div>
 </div>
 
-
-
 <!-- 支出弹窗 -->
 <div id="expenseModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);">
  <div style="background:#fff;padding:15px;margin:100px auto;width:90%;max-width:400px;border-radius:10px;">
   <h3>支出</h3>
-  <input id="expenseAmount" placeholder="支出金额" type="number" inputmode="decimal">
-  <input id="expenseNote" placeholder="备注（可选）">
+  <input id="expenseAmount" placeholder="支出金额" type="number">
+  <input id="expenseNote" placeholder="备注">
   <button onclick="addExpense();closeModal()">确认</button>
   <button onclick="closeModal()">取消</button>
  </div>
 </div>
-</div>
 
-
-<!-- TAB2 计算 -->
+<!-- TAB2 -->
 <div id="tab2" style="display:none">
 <h3>当前总资产: <span id="totalAsset2">0</span> RMB</h3>
-<input id="amount" placeholder="金额 RMB" type="number" inputmode="decimal">
-<input id="rate1" placeholder="卖出汇率" type="number" inputmode="decimal">
-<input id="rate2" placeholder="买入汇率" type="number" inputmode="decimal">
-<input id="fee" value="0.6" type="number" inputmode="decimal">
+<input id="amount" placeholder="金额 RMB" type="number">
+<input id="rate1" placeholder="卖出汇率" type="number">
+<input id="rate2" placeholder="买入汇率" type="number">
+<input id="fee" value="0.6" type="number">
 <button onclick="calculate()">计算</button>
 <div id="result"></div>
 <button onclick="saveRecord()">出售并记录</button>
 <div id="records"></div>
 </div>
 
-<!-- TAB3 统计 -->
+<!-- TAB3 -->
 <div id="tab3" style="display:none">
 <h3>总览</h3>
 <div class="card" id="summary"></div>
@@ -86,38 +78,54 @@ button { background:#d32f2f; color:#fff; border:none; }
 <div class="card" id="stats"></div>
 </div>
 
-
-
 <script>
-let currentData = null;
 
+// ===== 删除（带确认）=====
+function deleteAsset(index){
+ if(!confirm('确定要删除这条记录吗？')) return;
 
-function openExpenseModal(){ document.getElementById('expenseModal').style.display='block'; }
-function closeModal(){ document.getElementById('expenseModal').style.display='none'; }
+ let data = JSON.parse(localStorage.getItem('asset')||'[]');
+ data.splice(index,1);
+ localStorage.setItem('asset', JSON.stringify(data));
+ render();
+}
 
+// ===== TAB =====
 function showTab(tab){
  document.getElementById('tab1').style.display = tab===1?'block':'none';
  document.getElementById('tab2').style.display = tab===2?'block':'none';
  document.getElementById('tab3').style.display = tab===3?'block':'none';
 }
 
-// ===== 资产购买 =====
+// ===== 弹窗 =====
+function openExpenseModal(){ document.getElementById('expenseModal').style.display='block'; }
+function closeModal(){ document.getElementById('expenseModal').style.display='none'; }
+
+// ===== 购买（扣0.6%）=====
 function buyRMB(){
  let amount = parseFloat(document.getElementById('buyAmount').value);
  if(!amount) return alert('输入金额');
 
  let final = amount * (1-0.006);
+
  let data = JSON.parse(localStorage.getItem('asset')||'[]');
  data.push({amount:final,date:new Date().toLocaleDateString(),type:'buy'});
  localStorage.setItem('asset', JSON.stringify(data));
  render();
 }
 
-function getTotalAsset(){
+// ===== 添加资金（不扣）=====
+function addFund(){
+ let amount = parseFloat(document.getElementById('buyAmount').value);
+ if(!amount) return alert('输入金额');
+
  let data = JSON.parse(localStorage.getItem('asset')||'[]');
- return data.reduce((a,b)=>a+(parseFloat(b.amount)||0),0);
+ data.push({amount:amount,date:new Date().toLocaleDateString(),type:'fund'});
+ localStorage.setItem('asset', JSON.stringify(data));
+ render();
 }
 
+// ===== 支出 =====
 function addExpense(){
  let amount = parseFloat(document.getElementById('expenseAmount').value);
  let note = document.getElementById('expenseNote').value || '';
@@ -130,7 +138,15 @@ function addExpense(){
  render();
 }
 
+// ===== 总资产 =====
+function getTotalAsset(){
+ let data = JSON.parse(localStorage.getItem('asset')||'[]');
+ return data.reduce((a,b)=>a+(parseFloat(b.amount)||0),0);
+}
+
 // ===== 计算 =====
+let currentData=null;
+
 function calculate(){
  let amount = parseFloat(document.getElementById('amount').value);
  let r1 = parseFloat(document.getElementById('rate1').value);
@@ -143,11 +159,12 @@ function calculate(){
  let rmbBack = mmk * r2;
  let final = rmbBack * (1-fee);
  let profit = final - amount;
- let percent = (profit/amount*100);
+ let percent = profit/amount*100;
 
  currentData = { amount, profit, percent, rate1:r1, rate2:r2 };
 
- document.getElementById('result').innerHTML = `利润:${profit.toFixed(2)} 差价:${percent.toFixed(2)}%`;
+ document.getElementById('result').innerHTML =
+ `利润:${profit.toFixed(2)} 差价:${percent.toFixed(2)}%`;
 }
 
 function saveRecord(){
@@ -157,7 +174,6 @@ function saveRecord(){
  data.push({...currentData,date:new Date().toLocaleDateString()});
  localStorage.setItem('records', JSON.stringify(data));
 
- //扣资产
  let assetData = JSON.parse(localStorage.getItem('asset')||'[]');
  assetData.push({amount:-currentData.amount,date:new Date().toLocaleDateString()});
  localStorage.setItem('asset', JSON.stringify(assetData));
@@ -168,26 +184,32 @@ function saveRecord(){
 // ===== 渲染 =====
 function render(){
 
- //资产
  let assetData = JSON.parse(localStorage.getItem('asset')||'[]');
  let total = getTotalAsset();
+
  document.getElementById('totalAsset').innerText = total.toFixed(2);
  document.getElementById('totalAsset2').innerText = total.toFixed(2);
 
- let html='<table><tr><th>日期</th><th>类型</th><th>资产变化</th><th>备注</th></tr>';
- assetData.forEach(r=>{
- let typeText = r.type==='expense' ? '支出' : '购买';
+ //资产表
+ let html='<table><tr><th>日期</th><th>类型</th><th>资产变化</th><th>备注</th><th>操作</th></tr>';
+ assetData.forEach((r,i)=>{
+ let typeText =
+  r.type==='expense' ? '支出' :
+  r.type==='fund' ? '资金' :
+  '购买';
+
  html+=`<tr>
  <td>${r.date}</td>
  <td>${typeText}</td>
  <td>${(parseFloat(r.amount)||0).toFixed(2)}</td>
- <td>${r.note || ''}</td>
+ <td>${r.note||''}</td>
+ <td><button onclick="deleteAsset(${i})">删除</button></td>
  </tr>`;
  });
  html+='</table>';
  document.getElementById('assetRecords').innerHTML=html;
 
- //记录
+ //记录表
  let data = JSON.parse(localStorage.getItem('records')||'[]');
  let table='<table><tr><th>日期</th><th>金额</th><th>卖出</th><th>买入</th><th>利润</th><th>%</th></tr>';
  data.forEach(r=>{
@@ -196,36 +218,32 @@ function render(){
  <td>${r.amount}</td>
  <td>${r.rate1}</td>
  <td>${r.rate2}</td>
- <td>${(parseFloat(r.profit)||0).toFixed(2)}</td>
- <td>${(parseFloat(r.percent)||0).toFixed(2)}%</td>
+ <td>${r.profit.toFixed(2)}</td>
+ <td>${r.percent.toFixed(2)}%</td>
  </tr>`;
  });
  table+='</table>';
  document.getElementById('records').innerHTML=table;
 
  //统计
- let stats={};
- let assetStats={};
+ let stats={}, assetStats={};
 
  data.forEach(r=>{
- if(!stats[r.date]) stats[r.date]={profit:0,amount:0};
- stats[r.date].profit+=(parseFloat(r.profit)||0);
- stats[r.date].amount+=(parseFloat(r.amount)||0);
+  if(!stats[r.date]) stats[r.date]={profit:0,amount:0};
+  stats[r.date].profit+=(parseFloat(r.profit)||0);
+  stats[r.date].amount+=(parseFloat(r.amount)||0);
  });
 
  assetData.forEach(r=>{
- if(!assetStats[r.date]) assetStats[r.date]=0;
- if(r.amount>0) assetStats[r.date]+=(parseFloat(r.amount)||0);
+  if(!assetStats[r.date]) assetStats[r.date]=0;
+  if(r.amount>0) assetStats[r.date]+=(parseFloat(r.amount)||0);
  });
 
- //总汇总（单独显示）
- let totalProfitAll = 0;
- let totalBuyAll = 0;
+ let totalProfitAll=0,totalBuyAll=0;
+ Object.keys(stats).forEach(d=> totalProfitAll+=stats[d].profit);
+ Object.keys(assetStats).forEach(d=> totalBuyAll+=assetStats[d]);
 
- Object.keys(stats).forEach(d=> totalProfitAll += stats[d].profit);
- Object.keys(assetStats).forEach(d=> totalBuyAll += assetStats[d]);
-
- document.getElementById('summary').innerHTML = `
+ document.getElementById('summary').innerHTML=`
  <table>
  <tr><th>总购买</th><th>总利润</th><th>当前总资产</th></tr>
  <tr>
@@ -233,31 +251,27 @@ function render(){
  <td>${totalProfitAll.toFixed(2)}</td>
  <td>${total.toFixed(2)}</td>
  </tr>
- </table>
- `;
+ </table>`;
 
- //单独购买表
- let buyTable = '<table><tr><th>购买日期</th><th>购买总金额</th></tr>';
+ let buyTable='<table><tr><th>购买日期</th><th>购买总金额</th></tr>';
  Object.keys(assetStats).forEach(d=>{
- buyTable+=`<tr><td>${d}</td><td>${assetStats[d].toFixed(2)}</td></tr>`;
+  buyTable+=`<tr><td>${d}</td><td>${assetStats[d].toFixed(2)}</td></tr>`;
  });
  buyTable+='</table>';
- document.getElementById('buySummary').innerHTML = buyTable;
+ document.getElementById('buySummary').innerHTML=buyTable;
 
- //每日明细（单独表格）
  let s='<table><tr><th>日期</th><th>总购买</th><th>总利润</th></tr>';
-
  let allDates = Array.from(new Set([...Object.keys(stats),...Object.keys(assetStats)]));
 
  allDates.forEach(d=>{
- let totalProfit = stats[d]?stats[d].profit:0;
- let totalBuy = assetStats[d]?assetStats[d]:0;
+  let totalProfit = stats[d]?stats[d].profit:0;
+  let totalBuy = assetStats[d]?assetStats[d]:0;
 
- s+=`<tr>
- <td>${d}</td>
- <td>${totalBuy.toFixed(2)}</td>
- <td>${totalProfit.toFixed(2)}</td>
- </tr>`;
+  s+=`<tr>
+  <td>${d}</td>
+  <td>${totalBuy.toFixed(2)}</td>
+  <td>${totalProfit.toFixed(2)}</td>
+  </tr>`;
  });
 
  s+='</table>';
@@ -265,7 +279,7 @@ function render(){
 }
 
 render();
+
 </script>
-
-
-</body></html>
+</body>
+</html>
