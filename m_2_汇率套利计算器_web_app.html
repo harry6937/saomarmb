@@ -29,20 +29,15 @@ th { background:#d32f2f; color:#fff; }
 <div class="tab" onclick="showTab(3)">统计</div>
 </div>
 
-<!-- TAB1 -->
 <div id="tab1">
 <h3>当前总资产: <span id="totalAsset">0</span> RMB</h3>
-
 <input id="buyAmount" placeholder="购买金额" type="number">
-
 <button onclick="buyRMB()">➕ 购买</button>
 <button onclick="addFund()">➕ 添加资金</button>
 <button onclick="openExpenseModal()">➖ 支出</button>
-
 <div id="assetRecords"></div>
 </div>
 
-<!-- 支出弹窗 -->
 <div id="expenseModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);">
  <div style="background:#fff;padding:15px;margin:100px auto;width:90%;max-width:400px;border-radius:10px;">
   <h3>支出</h3>
@@ -53,7 +48,6 @@ th { background:#d32f2f; color:#fff; }
  </div>
 </div>
 
-<!-- TAB2 -->
 <div id="tab2" style="display:none">
 <h3>当前总资产: <span id="totalAsset2">0</span> RMB</h3>
 <input id="amount" placeholder="金额 RMB" type="number">
@@ -66,219 +60,208 @@ th { background:#d32f2f; color:#fff; }
 <div id="records"></div>
 </div>
 
-<!-- TAB3 -->
 <div id="tab3" style="display:none">
 <h3>总览</h3>
 <div class="card" id="summary"></div>
-
 <h3>购买统计</h3>
 <div class="card" id="buySummary"></div>
-
 <h3>每日统计</h3>
 <div class="card" id="stats"></div>
 </div>
 
 <script>
 
-// ===== 删除（带确认）=====
-function deleteAsset(index){
- if(!confirm('确定要删除这条记录吗？')) return;
+const API_URL="https://script.google.com/macros/s/AKfycbwDGgZXCZJptuIgTaZiE4W6wNTuv16y09HKdtE-hlQMAMwcjLk-sIIYqowzd3JT6rEq/exec";
 
- let data = JSON.parse(localStorage.getItem('asset')||'[]');
- data.splice(index,1);
- localStorage.setItem('asset', JSON.stringify(data));
- render();
+// ===== 日期统一函数 =====
+function formatDate(d){
+ if(!d) return "";
+ let date=new Date(d);
+ if(isNaN(date)) return d;
+ let y=date.getFullYear();
+ let m=(date.getMonth()+1).toString().padStart(2,'0');
+ let day=date.getDate().toString().padStart(2,'0');
+ return `${y}-${m}-${day}`;
 }
 
-// ===== TAB =====
-function showTab(tab){
- document.getElementById('tab1').style.display = tab===1?'block':'none';
- document.getElementById('tab2').style.display = tab===2?'block':'none';
- document.getElementById('tab3').style.display = tab===3?'block':'none';
+function today(){
+ return formatDate(new Date());
 }
 
-// ===== 弹窗 =====
-function openExpenseModal(){ document.getElementById('expenseModal').style.display='block'; }
-function closeModal(){ document.getElementById('expenseModal').style.display='none'; }
+// ===== 同步 =====
+async function loadFromGoogle(){
+ try{
+  let res=await fetch(API_URL);
+  let data=await res.json();
 
-// ===== 购买（扣0.6%）=====
+  if(data.asset){
+    let asset=data.asset.map(r=>({
+      date:formatDate(r[0]),
+      type:r[1],
+      amount:+r[2]||0,
+      note:r[3]||''
+    }));
+    localStorage.setItem('asset',JSON.stringify(asset));
+  }
+
+  if(data.records){
+    let records=data.records.map(r=>({
+      date:formatDate(r[0]),
+      amount:+r[1]||0,
+      rate1:+r[2]||0,
+      rate2:+r[3]||0,
+      profit:+r[4]||0,
+      percent:+r[5]||0
+    }));
+    localStorage.setItem('records',JSON.stringify(records));
+  }
+
+  render();
+ }catch(e){
+  render();
+ }
+}
+
+function syncAllToGoogle(){
+ let asset=JSON.parse(localStorage.getItem('asset')||'[]');
+ let records=JSON.parse(localStorage.getItem('records')||'[]');
+
+ let assetSheet=asset.map(r=>[r.date,r.type,r.amount,r.note||'']);
+ let recordSheet=records.map(r=>[r.date,r.amount,r.rate1,r.rate2,r.profit,r.percent]);
+
+ fetch(API_URL,{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({type:"sync_all",asset:assetSheet,records:recordSheet})
+ });
+}
+
+// ===== 删除 =====
+function deleteAsset(i){
+ if(!confirm("确定删除？"))return;
+ let d=JSON.parse(localStorage.getItem('asset')||'[]');
+ d.splice(i,1);
+ localStorage.setItem('asset',JSON.stringify(d));
+ render(); syncAllToGoogle();
+}
+
+// ===== tab =====
+function showTab(t){
+ tab1.style.display=t==1?'block':'none';
+ tab2.style.display=t==2?'block':'none';
+ tab3.style.display=t==3?'block':'none';
+}
+
+// ===== 操作 =====
 function buyRMB(){
- let amount = parseFloat(document.getElementById('buyAmount').value);
- if(!amount) return alert('输入金额');
-
- let final = amount * (1-0.006);
-
- let data = JSON.parse(localStorage.getItem('asset')||'[]');
- data.push({amount:final,date:new Date().toLocaleDateString(),type:'buy'});
- localStorage.setItem('asset', JSON.stringify(data));
- render();
+ let v=+buyAmount.value;if(!v)return alert("输入金额");
+ let d=JSON.parse(localStorage.getItem('asset')||'[]');
+ d.push({amount:v*0.994,date:today(),type:'buy'});
+ localStorage.setItem('asset',JSON.stringify(d));
+ render(); syncAllToGoogle();
 }
 
-// ===== 添加资金（不扣）=====
 function addFund(){
- let amount = parseFloat(document.getElementById('buyAmount').value);
- if(!amount) return alert('输入金额');
-
- let data = JSON.parse(localStorage.getItem('asset')||'[]');
- data.push({amount:amount,date:new Date().toLocaleDateString(),type:'fund'});
- localStorage.setItem('asset', JSON.stringify(data));
- render();
+ let v=+buyAmount.value;if(!v)return alert("输入金额");
+ let d=JSON.parse(localStorage.getItem('asset')||'[]');
+ d.push({amount:v,date:today(),type:'fund'});
+ localStorage.setItem('asset',JSON.stringify(d));
+ render(); syncAllToGoogle();
 }
 
-// ===== 支出 =====
 function addExpense(){
- let amount = parseFloat(document.getElementById('expenseAmount').value);
- let note = document.getElementById('expenseNote').value || '';
-
- if(!amount) return alert('输入支出金额');
-
- let data = JSON.parse(localStorage.getItem('asset')||'[]');
- data.push({amount:-amount,date:new Date().toLocaleDateString(),note:note,type:'expense'});
- localStorage.setItem('asset', JSON.stringify(data));
- render();
-}
-
-// ===== 总资产 =====
-function getTotalAsset(){
- let data = JSON.parse(localStorage.getItem('asset')||'[]');
- return data.reduce((a,b)=>a+(parseFloat(b.amount)||0),0);
+ let v=+expenseAmount.value,n=expenseNote.value||'';
+ if(!v)return alert("输入金额");
+ let d=JSON.parse(localStorage.getItem('asset')||'[]');
+ d.push({amount:-v,date:today(),note:n,type:'expense'});
+ localStorage.setItem('asset',JSON.stringify(d));
+ render(); syncAllToGoogle();
 }
 
 // ===== 计算 =====
 let currentData=null;
 
 function calculate(){
- let amount = parseFloat(document.getElementById('amount').value);
- let r1 = parseFloat(document.getElementById('rate1').value);
- let r2 = parseFloat(document.getElementById('rate2').value);
- let fee = parseFloat(document.getElementById('fee').value)/100;
-
- if(!amount || !r1 || !r2) return alert('请输入完整');
-
- let mmk = amount / r1;
- let rmbBack = mmk * r2;
- let final = rmbBack * (1-fee);
- let profit = final - amount;
- let percent = profit/amount*100;
-
- currentData = { amount, profit, percent, rate1:r1, rate2:r2 };
-
- document.getElementById('result').innerHTML =
- `利润:${profit.toFixed(2)} 差价:${percent.toFixed(2)}%`;
+ let a=+amount.value,r1=+rate1.value,r2=+rate2.value,f=+fee.value/100;
+ if(!a||!r1||!r2)return alert("输入完整");
+ let final=(a/r1*r2)*(1-f);
+ let profit=final-a,percent=profit/a*100;
+ currentData={amount:a,profit,percent,rate1:r1,rate2:r2};
+ result.innerHTML=`利润:${profit.toFixed(2)} 差价:${percent.toFixed(2)}%`;
 }
 
 function saveRecord(){
- if(!currentData) return alert('先计算');
+ if(!currentData)return alert("先计算");
+ let r=JSON.parse(localStorage.getItem('records')||'[]');
+ r.push({...currentData,date:today()});
+ localStorage.setItem('records',JSON.stringify(r));
 
- let data = JSON.parse(localStorage.getItem('records')||'[]');
- data.push({...currentData,date:new Date().toLocaleDateString()});
- localStorage.setItem('records', JSON.stringify(data));
+ let a=JSON.parse(localStorage.getItem('asset')||'[]');
+ a.push({amount:-currentData.amount,date:today()});
+ localStorage.setItem('asset',JSON.stringify(a));
 
- let assetData = JSON.parse(localStorage.getItem('asset')||'[]');
- assetData.push({amount:-currentData.amount,date:new Date().toLocaleDateString()});
- localStorage.setItem('asset', JSON.stringify(assetData));
-
- render();
+ render(); syncAllToGoogle();
 }
 
 // ===== 渲染 =====
 function render(){
 
- let assetData = JSON.parse(localStorage.getItem('asset')||'[]');
- let total = getTotalAsset();
+ let asset=JSON.parse(localStorage.getItem('asset')||'[]');
+ let records=JSON.parse(localStorage.getItem('records')||'[]');
 
- document.getElementById('totalAsset').innerText = total.toFixed(2);
- document.getElementById('totalAsset2').innerText = total.toFixed(2);
+ let total=asset.reduce((a,b)=>a+(+b.amount||0),0);
+ totalAsset.innerText=total.toFixed(2);
+ totalAsset2.innerText=total.toFixed(2);
 
- //资产表
- let html='<table><tr><th>日期</th><th>类型</th><th>资产变化</th><th>备注</th><th>操作</th></tr>';
- assetData.forEach((r,i)=>{
- let typeText =
-  r.type==='expense' ? '支出' :
-  r.type==='fund' ? '资金' :
-  '购买';
-
- html+=`<tr>
- <td>${r.date}</td>
- <td>${typeText}</td>
- <td>${(parseFloat(r.amount)||0).toFixed(2)}</td>
- <td>${r.note||''}</td>
- <td><button onclick="deleteAsset(${i})">删除</button></td>
- </tr>`;
+ let html='<table><tr><th>日期</th><th>类型</th><th>金额</th><th>备注</th><th>操作</th></tr>';
+ asset.forEach((r,i)=>{
+ let t=r.type=='expense'?'支出':r.type=='fund'?'资金':'购买';
+ html+=`<tr><td>${r.date}</td><td>${t}</td><td>${(+r.amount).toFixed(2)}</td><td>${r.note||''}</td><td><button onclick="deleteAsset(${i})">删除</button></td></tr>`;
  });
- html+='</table>';
- document.getElementById('assetRecords').innerHTML=html;
+ assetRecords.innerHTML=html+'</table>';
 
- //记录表
- let data = JSON.parse(localStorage.getItem('records')||'[]');
  let table='<table><tr><th>日期</th><th>金额</th><th>卖出</th><th>买入</th><th>利润</th><th>%</th></tr>';
- data.forEach(r=>{
- table+=`<tr>
- <td>${r.date}</td>
- <td>${r.amount}</td>
- <td>${r.rate1}</td>
- <td>${r.rate2}</td>
- <td>${r.profit.toFixed(2)}</td>
- <td>${r.percent.toFixed(2)}%</td>
- </tr>`;
+ records.forEach(r=>{
+ table+=`<tr><td>${r.date}</td><td>${r.amount}</td><td>${r.rate1}</td><td>${r.rate2}</td><td>${r.profit.toFixed(2)}</td><td>${r.percent.toFixed(2)}%</td></tr>`;
  });
- table+='</table>';
- document.getElementById('records').innerHTML=table;
+ document.getElementById('records').innerHTML=table+'</table>';
 
  //统计
- let stats={}, assetStats={};
+ let statsData={},assetStats={};
 
- data.forEach(r=>{
-  if(!stats[r.date]) stats[r.date]={profit:0,amount:0};
-  stats[r.date].profit+=(parseFloat(r.profit)||0);
-  stats[r.date].amount+=(parseFloat(r.amount)||0);
+ records.forEach(r=>{
+  if(!statsData[r.date]) statsData[r.date]={profit:0};
+  statsData[r.date].profit+=+r.profit||0;
  });
 
- assetData.forEach(r=>{
+ asset.forEach(r=>{
   if(!assetStats[r.date]) assetStats[r.date]=0;
-  if(r.amount>0) assetStats[r.date]+=(parseFloat(r.amount)||0);
+  if(r.amount>0) assetStats[r.date]+=+r.amount||0;
  });
 
- let totalProfitAll=0,totalBuyAll=0;
- Object.keys(stats).forEach(d=> totalProfitAll+=stats[d].profit);
- Object.keys(assetStats).forEach(d=> totalBuyAll+=assetStats[d]);
+ let totalProfit=Object.values(statsData).reduce((a,b)=>a+b.profit,0);
+ let totalBuy=Object.values(assetStats).reduce((a,b)=>a+b,0);
 
- document.getElementById('summary').innerHTML=`
- <table>
+ summary.innerHTML=`<table>
  <tr><th>总购买</th><th>总利润</th><th>当前总资产</th></tr>
- <tr>
- <td>${totalBuyAll.toFixed(2)}</td>
- <td>${totalProfitAll.toFixed(2)}</td>
- <td>${total.toFixed(2)}</td>
- </tr>
+ <tr><td>${totalBuy.toFixed(2)}</td><td>${totalProfit.toFixed(2)}</td><td>${total.toFixed(2)}</td></tr>
  </table>`;
 
- let buyTable='<table><tr><th>购买日期</th><th>购买总金额</th></tr>';
+ let buyTable='<table><tr><th>日期</th><th>购买</th></tr>';
  Object.keys(assetStats).forEach(d=>{
   buyTable+=`<tr><td>${d}</td><td>${assetStats[d].toFixed(2)}</td></tr>`;
  });
- buyTable+='</table>';
- document.getElementById('buySummary').innerHTML=buyTable;
+ buySummary.innerHTML=buyTable+'</table>';
 
- let s='<table><tr><th>日期</th><th>总购买</th><th>总利润</th></tr>';
- let allDates = Array.from(new Set([...Object.keys(stats),...Object.keys(assetStats)]));
-
- allDates.forEach(d=>{
-  let totalProfit = stats[d]?stats[d].profit:0;
-  let totalBuy = assetStats[d]?assetStats[d]:0;
-
-  s+=`<tr>
-  <td>${d}</td>
-  <td>${totalBuy.toFixed(2)}</td>
-  <td>${totalProfit.toFixed(2)}</td>
-  </tr>`;
+ let s='<table><tr><th>日期</th><th>购买</th><th>利润</th></tr>';
+ let dates=[...new Set([...Object.keys(statsData),...Object.keys(assetStats)])];
+ dates.forEach(d=>{
+  s+=`<tr><td>${d}</td><td>${(assetStats[d]||0).toFixed(2)}</td><td>${(statsData[d]?.profit||0).toFixed(2)}</td></tr>`;
  });
-
- s+='</table>';
- document.getElementById('stats').innerHTML=s;
+ stats.innerHTML=s+'</table>';
 }
 
-render();
+loadFromGoogle();
 
 </script>
 </body>
