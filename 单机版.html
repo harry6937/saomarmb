@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M2 汇率套利计算器（单机版）</title>
+
+<style>
+body { font-family: Arial; padding: 10px; background:#f5f5f5; }
+.container { max-width: 500px; margin:auto; }
+input, button { width:100%; padding:10px; margin:5px 0; font-size:16px; }
+button { background:#d32f2f; color:#fff; border:none; }
+.tabs { display:flex; margin-bottom:10px; }
+.tab { flex:1; padding:10px; text-align:center; background:#ddd; }
+.active { background:#d32f2f; color:#fff; }
+table { width:100%; border-collapse:collapse; background:#fff; margin-top:10px; }
+th, td { border:1px solid #ddd; padding:8px; text-align:center; font-size:14px; }
+th { background:#d32f2f; color:#fff; }
+.card { margin-bottom:15px; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="tabs">
+<div class="tab active" onclick="showTab(1)">资产</div>
+<div class="tab" onclick="showTab(2)">计算</div>
+<div class="tab" onclick="showTab(3)">统计</div>
+</div>
+
+<!-- TAB1 -->
+<div id="tab1">
+<h3>当前总资产: <span id="totalAsset">0</span> RMB</h3>
+
+<input id="buyAmount" placeholder="购买金额" type="number">
+
+<button onclick="buyRMB()">➕ 购买</button>
+<button onclick="addFund()">➕ 添加资金</button>
+<button onclick="openExpenseModal()">➖ 支出</button>
+
+<div id="assetRecords"></div>
+</div>
+
+<!-- 支出弹窗 -->
+<div id="expenseModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);">
+ <div style="background:#fff;padding:15px;margin:100px auto;width:90%;max-width:400px;border-radius:10px;">
+  <h3>支出</h3>
+  <input id="expenseAmount" placeholder="支出金额" type="number">
+  <input id="expenseNote" placeholder="备注">
+  <button onclick="addExpense();closeModal()">确认</button>
+  <button onclick="closeModal()">取消</button>
+ </div>
+</div>
+
+<!-- TAB2 -->
+<div id="tab2" style="display:none">
+<h3>当前总资产: <span id="totalAsset2">0</span> RMB</h3>
+<input id="amount" placeholder="金额 RMB" type="number">
+<input id="rate1" placeholder="卖出汇率" type="number">
+<input id="rate2" placeholder="买入汇率" type="number">
+<input id="fee" value="0.6" type="number">
+<button onclick="calculate()">计算</button>
+<div id="result"></div>
+<button onclick="saveRecord()">出售并记录</button>
+<div id="records"></div>
+</div>
+
+<!-- TAB3 -->
+<div id="tab3" style="display:none">
+<h3>总览</h3>
+<div class="card" id="summary"></div>
+</div>
+
+<script>
+
+// ===== tab =====
+function showTab(t){
+ tab1.style.display=t==1?'block':'none';
+ tab2.style.display=t==2?'block':'none';
+ tab3.style.display=t==3?'block':'none';
+}
+
+// ===== 弹窗 =====
+function openExpenseModal(){
+ document.getElementById('expenseModal').style.display='block';
+}
+function closeModal(){
+ document.getElementById('expenseModal').style.display='none';
+}
+
+// ===== 操作 =====
+function buyRMB(){
+ let v=parseFloat(buyAmount.value); 
+ if(!v) return alert('输入金额');
+
+ let data=JSON.parse(localStorage.getItem('asset')||'[]');
+ data.push({
+   amount:v*0.994,
+   date:new Date().toLocaleDateString(),
+   type:'buy'
+ });
+
+ localStorage.setItem('asset',JSON.stringify(data));
+ render();
+}
+
+function addFund(){
+ let v=parseFloat(buyAmount.value); 
+ if(!v) return alert('输入金额');
+
+ let data=JSON.parse(localStorage.getItem('asset')||'[]');
+ data.push({
+   amount:v,
+   date:new Date().toLocaleDateString(),
+   type:'fund'
+ });
+
+ localStorage.setItem('asset',JSON.stringify(data));
+ render();
+}
+
+function addExpense(){
+ let v=parseFloat(expenseAmount.value);
+ let note=expenseNote.value||'';
+
+ if(!v) return alert('输入金额');
+
+ let data=JSON.parse(localStorage.getItem('asset')||'[]');
+ data.push({
+   amount:-v,
+   date:new Date().toLocaleDateString(),
+   note:note,
+   type:'expense'
+ });
+
+ localStorage.setItem('asset',JSON.stringify(data));
+ render();
+}
+
+// ===== 删除 =====
+function deleteAsset(i){
+ if(!confirm('确定删除？')) return;
+
+ let data=JSON.parse(localStorage.getItem('asset')||'[]');
+ data.splice(i,1);
+
+ localStorage.setItem('asset',JSON.stringify(data));
+ render();
+}
+
+// ===== 计算 =====
+let currentData=null;
+
+function calculate(){
+ let a=+amount.value,
+     r1=+rate1.value,
+     r2=+rate2.value,
+     f=+fee.value/100;
+
+ if(!a||!r1||!r2) return alert('输入完整');
+
+ let final=(a/r1*r2)*(1-f);
+ let profit=final-a,
+     percent=profit/a*100;
+
+ currentData={amount:a,profit,percent,rate1:r1,rate2:r2};
+
+ result.innerHTML=`利润:${profit.toFixed(2)} 差价:${percent.toFixed(2)}%`;
+}
+
+function saveRecord(){
+ if(!currentData) return alert('先计算');
+
+ let r=JSON.parse(localStorage.getItem('records')||'[]');
+ r.push({...currentData,date:new Date().toLocaleDateString()});
+ localStorage.setItem('records',JSON.stringify(r));
+
+ let a=JSON.parse(localStorage.getItem('asset')||'[]');
+ a.push({amount:-currentData.amount,date:new Date().toLocaleDateString()});
+ localStorage.setItem('asset',JSON.stringify(a));
+
+ render();
+}
+
+// ===== 渲染 =====
+function render(){
+ let asset=JSON.parse(localStorage.getItem('asset')||'[]');
+ let records=JSON.parse(localStorage.getItem('records')||'[]');
+
+ let total=asset.reduce((a,b)=>a+(+b.amount||0),0);
+ totalAsset.innerText=total.toFixed(2);
+ totalAsset2.innerText=total.toFixed(2);
+
+ //资产表
+ let html='<table><tr><th>日期</th><th>类型</th><th>金额</th><th>备注</th><th>操作</th></tr>';
+
+ asset.forEach((r,i)=>{
+ let t=r.type=='expense'?'支出':r.type=='fund'?'资金':'购买';
+
+ html+=`<tr>
+ <td>${r.date}</td>
+ <td>${t}</td>
+ <td>${(+r.amount).toFixed(2)}</td>
+ <td>${r.note||''}</td>
+ <td><button onclick="deleteAsset(${i})">删除</button></td>
+ </tr>`;
+ });
+
+ html+='</table>';
+ assetRecords.innerHTML=html;
+
+ //记录
+ let table='<table><tr><th>日期</th><th>金额</th><th>卖出</th><th>买入</th><th>利润</th><th>%</th></tr>';
+
+ records.forEach(r=>{
+ table+=`<tr>
+ <td>${r.date}</td>
+ <td>${r.amount}</td>
+ <td>${r.rate1}</td>
+ <td>${r.rate2}</td>
+ <td>${r.profit.toFixed(2)}</td>
+ <td>${r.percent.toFixed(2)}%</td>
+ </tr>`;
+ });
+
+ table+='</table>';
+ document.getElementById('records').innerHTML=table;
+
+ //统计
+ let profit=records.reduce((a,b)=>a+(+b.profit||0),0);
+ let buy=asset.filter(x=>x.amount>0).reduce((a,b)=>a+(+b.amount||0),0);
+
+ summary.innerHTML=`
+ <table>
+ <tr><th>总购买</th><th>总利润</th><th>总资产</th></tr>
+ <tr>
+ <td>${buy.toFixed(2)}</td>
+ <td>${profit.toFixed(2)}</td>
+ <td>${total.toFixed(2)}</td>
+ </tr>
+ </table>`;
+}
+
+// ===== 启动 =====
+render();
+
+</script>
+</body>
+</html>
